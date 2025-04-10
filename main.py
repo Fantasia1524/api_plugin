@@ -1,21 +1,46 @@
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
+import requests  # 用于发送 HTTP 请求
 
-@register("helloworld", "YourName", "一个简单的 Hello World 插件", "1.0.0")
-class MyPlugin(Star):
+# ALAPI 的历史上的今天 API 地址
+HISTORY_TODAY_API_URL = "https://v1.alapi.cn/api/today"
+
+@register("alapi_history_today", "YourName", "调用 ALAPI 的历史上的今天 API", "1.0.0")
+class HistoryTodayPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
     
-    # 注册指令的装饰器。指令名为 helloworld。注册成功后，发送 `/helloworld` 就会触发这个指令，并回复 `你好, {user_name}!`
-    @filter.command("helloworld")
-    async def helloworld(self, event: AstrMessageEvent):
-        '''这是一个 hello world 指令''' # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
-        user_name = event.get_sender_name()
-        message_str = event.message_str # 用户发的纯文本消息字符串
-        message_chain = event.get_messages() # 用户所发的消息的消息链 # from astrbot.api.message_components import *
-        logger.info(message_chain)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {message_str}!") # 发送一条纯文本消息
-
+    @filter.command("today")
+    async def history_today(self, event: AstrMessageEvent):
+        '''调用 ALAPI 的历史上的今天 API，返回历史上的今天发生的大事'''
+        try:
+            # 发送 HTTP GET 请求到 ALAPI 的历史上的今天 API
+            response = requests.get(HISTORY_TODAY_API_URL, params={"key": "YOUR_API_KEY"})
+            response.raise_for_status()  # 检查请求是否成功
+            
+            # 解析返回的 JSON 数据
+            data = response.json()
+            if data.get("code") == 200:
+                events = data.get("data", [])
+                if events:
+                    # 格式化历史事件
+                    formatted_events = []
+                    for event_data in events:
+                        title = event_data.get("title", "无标题")
+                        content = event_data.get("content", "无内容")
+                        formatted_events.append(f"【{title}】\n{content}\n")
+                    
+                    # 回复用户
+                    yield event.plain_result(f"【历史上的今天】\n{''.join(formatted_events)}")
+                else:
+                    yield event.plain_result("今天没有历史上的大事记录。")
+            else:
+                yield event.plain_result(f"API 返回错误：{data.get('msg', '未知错误')}")        
+        except Exception as e:
+            logger.error(f"调用历史上的今天 API 失败: {e}")
+            yield event.plain_result("抱歉，调用 API 时出错了，请稍后再试！")
+    
     async def terminate(self):
-        '''可选择实现 terminate 函数，当插件被卸载/停用时会调用。'''
+        '''插件终止时的清理工作'''
+        logger.info("HistoryTodayPlugin 已停止运行")
