@@ -13,9 +13,9 @@ from astrbot.api.star import Context, Star, register
 from astrbot.core.platform import AstrMessageEvent
 import astrbot.core.message.components as Comp
 
-RESOURCE_DIR = Path("data/plugins/astrbot_plugin_history_day/resource")
-FONT_PATH = RESOURCE_DIR / "华文新魏.ttf"
-BACKGROUND_PATH = RESOURCE_DIR / "background.png"
+# 修改为 Windows 系统自带的字体路径
+FONT_PATH = Path(r"C:\Windows\Fonts\simhei.ttf")  # 黑体字体路径
+BACKGROUND_PATH = Path("data/plugins/astrbot_plugin_history_day/resource/background.png")  # 背景图片路径
 
 TEMP_DIR = Path("data/plugins_data/astrbot_plugin_history_day")
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -141,49 +141,4 @@ class HistoryPlugin(Star):
             text_middle = text[address_head + 9:address_end - 2]
             if '"' in text_middle:
                 text_middle = text_middle.replace('"', " ")
-                text = text[:address_head + 9] + text_middle + text[address_end - 2:]
-            address_head = address_end
-
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON解析失败: {e}")
-            return {}
-
-    @staticmethod
-    def text_to_image_bytes(text: str) -> bytes:
-        """将给定文本转换为图像"""
-        FONT_SIZE = 20  # 字体大小
-        LINE_HEIGHT = 30  # 行高
-        MARGIN_LEFT = 40  # 左边距
-        MARGIN_RIGHT = 10  # 右边距
-        TOP_MARGIN = 10  # 上边距
-        BOTTOM_MARGIN = 10  # 下边距
-
-        font = ImageFont.truetype(str(FONT_PATH), FONT_SIZE)
-        draw = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-
-        lines = text.split('\n')
-        max_width = 0
-        total_height = 0
-
-        for line in lines:
-            bbox = draw.textbbox((0, 0), line, font=font)
-            line_width, line_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
-            max_width = max(max_width, line_width)
-            total_height += LINE_HEIGHT
-
-        background_img = Image.open(BACKGROUND_PATH).resize(
-            (max_width + MARGIN_RIGHT + 80, total_height + BOTTOM_MARGIN)
-        )
-        draw = ImageDraw.Draw(background_img)
-
-        y_text = TOP_MARGIN
-        for line in lines:
-            line_color = (random.randint(0, 40), random.randint(0, 16), random.randint(0, 32))
-            draw.text((MARGIN_LEFT, y_text), line, fill=line_color, font=font)
-            y_text += LINE_HEIGHT
-
-        img_byte_arr = BytesIO()
-        background_img.save(img_byte_arr, format='PNG')
-        return img_byte_arr.getvalue()
+                text = text[:address_head + 
