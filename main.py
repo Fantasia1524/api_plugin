@@ -16,7 +16,8 @@ class HistoryTodayPlugin(Star):
         '''调用 ALAPI 的历史上的今天 API，返回历史上的今天发生的大事'''
         try:
             # 发送 HTTP GET 请求到 ALAPI 的历史上的今天 API
-            response = requests.get(HISTORY_TODAY_API_URL, params={"key": "YOUR_API_KEY"})
+            # 在这里加入你的 API 密钥
+            response = requests.get(HISTORY_TODAY_API_URL, params={"token": "vnurbnwb72uu6vrlyfblc261apn5wv"})
             response.raise_for_status()  # 检查请求是否成功
             
             # 解析返回的 JSON 数据
